@@ -13,29 +13,23 @@ body {
   padding:15px;
 }
 
-h3 {
-  margin-bottom:10px;
-}
-
-input[type=text] {
+input, button {
   width:100%;
-  padding:12px;
+  padding:14px;
   font-size:16px;
-  border-radius:6px;
+  border-radius:8px;
   border:none;
   margin-bottom:12px;
 }
 
 button {
-  width:100%;
-  padding:14px;
-  font-size:18px;
-  font-weight:bold;
   background:#e50914;
   color:#fff;
-  border:none;
-  border-radius:8px;
-  margin-bottom:15px;
+  font-weight:bold;
+}
+
+button:disabled {
+  background:#555;
 }
 
 #player {
@@ -44,18 +38,8 @@ button {
   opacity:0;
 }
 
-.volume-box {
-  margin-top:10px;
-}
-
-.volume-box label {
-  display:block;
-  margin-bottom:5px;
+label {
   font-size:14px;
-}
-
-input[type=range] {
-  width:100%;
 }
 </style>
 </head>
@@ -66,44 +50,60 @@ input[type=range] {
 
 <input id="link" placeholder="Paste link YouTube di sini">
 
-<button id="play">▶ PLAY</button>
+<button id="play" disabled>⏳ Loading Player...</button>
 
 <div id="player"></div>
 
-<div class="volume-box">
-  <label>🔊 Volume</label>
-  <input id="volume" type="range" min="0" max="100" value="60">
-</div>
+<label>🔊 Volume</label>
+<input id="volume" type="range" min="0" max="100" value="60">
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-let player, vid="";
+let player;
+let playerReady = false;
 
-function onYouTubeIframeAPIReady(){
-  player=new YT.Player('player',{
-    playerVars:{controls:0,playsinline:1},
-    events:{
-      onStateChange:e=>{
-        if(e.data===YT.PlayerState.ENDED) player.playVideo()
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('player', {
+    playerVars: {
+      controls: 0,
+      playsinline: 1
+    },
+    events: {
+      onReady: () => {
+        playerReady = true;
+        playBtn.disabled = false;
+        playBtn.textContent = "▶ PLAY";
+      },
+      onStateChange: e => {
+        if (e.data === YT.PlayerState.ENDED) {
+          player.playVideo(); // LOOP
+        }
       }
     }
-  })
+  });
 }
 
-function getId(url){
-  if(url.includes("v=")) return url.split("v=")[1].split("&")[0]
-  if(url.includes("youtu.be/")) return url.split("youtu.be/")[1]
-  return ""
+function getId(url) {
+  if (!url) return "";
+  if (url.includes("v=")) return url.split("v=")[1].split("&")[0];
+  if (url.includes("youtu.be/")) return url.split("youtu.be/")[1].split("?")[0];
+  return "";
 }
 
-document.getElementById("play").onclick=()=>{
-  vid=getId(document.getElementById("link").value)
-  if(!vid) return alert("Link salah")
-  player.loadVideoById(vid)
-  player.setVolume(volume.value)
-}
+const playBtn = document.getElementById("play");
+const volume = document.getElementById("volume");
 
-volume.oninput=()=>player&&player.setVolume(volume.value)
+playBtn.onclick = () => {
+  if (!playerReady) return alert("Player belum siap");
+  const id = getId(document.getElementById("link").value);
+  if (!id) return alert("Link YouTube tidak valid");
+  player.loadVideoById(id);
+  player.setVolume(volume.value);
+};
+
+volume.oninput = () => {
+  if (playerReady) player.setVolume(volume.value);
+};
 </script>
 
 </body>
