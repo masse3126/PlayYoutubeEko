@@ -3,107 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YouTube Audio Only</title>
+<title>YouTube Audio Player</title>
 
 <style>
 body {
-  background:#000;
-  color:#fff;
-  font-family:Arial,sans-serif;
-  padding:15px;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  text-align: center;
+  padding: 20px;
 }
-
 input, button {
-  width:100%;
-  padding:14px;
-  font-size:16px;
-  border-radius:8px;
-  border:none;
-  margin-bottom:12px;
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 16px;
 }
-
-button {
-  background:#e50914;
-  color:#fff;
-  font-weight:bold;
-}
-
-button:disabled {
-  background:#555;
-}
-
 #player {
-  width:1px;
-  height:1px;
-  opacity:0;
-}
-
-label {
-  font-size:14px;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 </style>
 </head>
 
 <body>
 
-<h3>🎧 Audio Only YouTube</h3>
+<h3>🎧 YouTube Audio Only</h3>
 
-<input id="link" placeholder="Paste link YouTube di sini">
+<input id="url" placeholder="Paste link YouTube di sini">
 
-<button id="play" disabled>⏳ Loading Player...</button>
+<button id="playBtn" disabled>⏳ Loading Player…</button>
+
+<label>🔊 Volume</label>
+<input type="range" min="0" max="100" value="50" id="volume">
 
 <div id="player"></div>
 
-<label>🔊 Volume</label>
-<input id="volume" type="range" min="0" max="100" value="60">
-
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 let player;
-let playerReady = false;
+let ready = false;
+
+function extractID(url) {
+  const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+  return m ? m[1] : null;
+}
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('player', {
+    height: '0',
+    width: '0',
+    videoId: '',
     playerVars: {
-      controls: 0,
-      playsinline: 1
+      autoplay: 0,
+      loop: 1,
+      controls: 0
     },
     events: {
       onReady: () => {
-        playerReady = true;
+        ready = true;
         playBtn.disabled = false;
-        playBtn.textContent = "▶ PLAY";
-      },
-      onStateChange: e => {
-        if (e.data === YT.PlayerState.ENDED) {
-          player.playVideo(); // LOOP
-        }
+        playBtn.innerText = '▶ PLAY';
       }
     }
   });
 }
 
-function getId(url) {
-  if (!url) return "";
-  if (url.includes("v=")) return url.split("v=")[1].split("&")[0];
-  if (url.includes("youtu.be/")) return url.split("youtu.be/")[1].split("?")[0];
-  return "";
-}
-
-const playBtn = document.getElementById("play");
-const volume = document.getElementById("volume");
-
 playBtn.onclick = () => {
-  if (!playerReady) return alert("Player belum siap");
-  const id = getId(document.getElementById("link").value);
-  if (!id) return alert("Link YouTube tidak valid");
+  if (!ready) return;
+
+  const id = extractID(url.value);
+  if (!id) return alert('Link YouTube tidak valid');
+
   player.loadVideoById(id);
   player.setVolume(volume.value);
 };
 
 volume.oninput = () => {
-  if (playerReady) player.setVolume(volume.value);
+  if (player) player.setVolume(volume.value);
 };
+
+const tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+document.body.appendChild(tag);
 </script>
 
 </body>
