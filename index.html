@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;font-family:sans-serif;padding:20px">
+
+<h3>YouTube Audio Test</h3>
+
+<input id="link" placeholder="Paste link YouTube" style="width:100%;padding:10px">
+
+<br><br>
+
+<button id="play" style="width:100%;padding:15px;font-size:18px">
+TAP UNTUK PLAY
+</button>
+
+<div id="player" style="display:none"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+let player, vid = "";
+
+function onYouTubeIframeAPIReady(){
+  player = new YT.Player('player',{events:{
+    onStateChange:e=>{
+      if(e.data===YT.PlayerState.ENDED) player.playVideo()
+    }
+  }})
+}
+
+function getId(url){
+  if(url.includes("v=")) return url.split("v=")[1].split("&")[0];
+  if(url.includes("youtu.be/")) return url.split("youtu.be/")[1];
+  return "";
+}
+
+document.getElementById("play").onclick = ()=>{
+  vid = getId(document.getElementById("link").value);
+  if(!vid) return alert("link salah");
+  player.loadVideoById(vid);
+}
+</script>
+
+</body>
+</html>
